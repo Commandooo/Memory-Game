@@ -1,8 +1,27 @@
 const game = document.querySelector('.game')
+const movesCount = document.querySelector('.moves')
+const timerCount = document.querySelector('.timer')
 let isPaused = false;
 let firstCard = null;
 let matches = 0;
+let moves = 0;
+let seconds = 0;
+let minutes = 0;
+let interval;
+let minutesValue;
+let secondsValue;
 
+const timeGenerator = () => {
+    seconds += 1;
+    if (seconds >= 60) {
+        minutes += 1;
+        seconds = 0;
+    }
+    secondsValue = seconds < 10 ? `0${seconds}` : seconds;
+    minutesValue = minutes < 10 ? `0${minutes}` : minutes;
+    timerCount.textContent = `${minutesValue}:${secondsValue}`;
+}
+ 
 const loadCharacter = async () => {
     const APIUrl = "https://rickandmortyapi.com/api/character/";
     const randomIds = new Set();
@@ -38,7 +57,6 @@ const clickCard = (event) => {
     if(front.classList.contains("rotated") || isPaused) return;
 
     isPaused = true;
-
     rotateElements([front, back])
     if(!firstCard){
         firstCard = characterCard;
@@ -48,6 +66,8 @@ const clickCard = (event) => {
         const secondCharacterName = characterCard.dataset.charactername;
         const firstCharacterName = firstCard.dataset.charactername;
         if(firstCharacterName !== secondCharacterName){
+            moves++;
+            movesCount.textContent = `${moves}`;
             const [firstFront, firstBack] = getFrontAndBackFromCard(firstCard)
             setTimeout(() => {
                 rotateElements([front, back, firstFront, firstBack]);
@@ -56,9 +76,12 @@ const clickCard = (event) => {
             }, 1000);
             
         }else{
+            moves++;
+            movesCount.textContent = `${moves}`;
             matches++;
             if(matches === 8){
-                console.log("winner");
+                clearInterval(interval);
+                alert(`You won in ${moves} moves and in ${minutesValue}:${secondsValue}!`);
             }
             firstCard = null;
             isPaused = false;
@@ -82,6 +105,12 @@ const generateGame = () => {
     isPaused = true;
     firstCard = null;
     matches = 0;
+    moves = 0;
+    movesCount.textContent = "";
+    seconds = 0;
+    minutes = 0;
+    timerCount.textContent = "";
+    interval = setInterval(timeGenerator, 1000);
     setTimeout(async () => {
         const character = await loadCharacter();
         showCharacter([...character, ...character]);
